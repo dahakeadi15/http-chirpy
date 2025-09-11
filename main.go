@@ -1,11 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"sync/atomic"
 )
+
+type apiConfig struct {
+	fileserverHits atomic.Int32
+}
 
 func main() {
 	const filepathRoot = "."
@@ -29,34 +32,4 @@ func main() {
 
 	log.Printf("Serving files from %s on port %s:\n", filepathRoot, port)
 	log.Fatal(server.ListenAndServe())
-}
-
-func handlerReadiness(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(http.StatusText(http.StatusOK)))
-}
-
-type apiConfig struct {
-	fileserverHits atomic.Int32
-}
-
-func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileserverHits.Add(1)
-		next.ServeHTTP(w, r)
-	})
-}
-
-func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(fmt.Appendf(nil, "Hits: %d", cfg.fileserverHits.Load()))
-	// fmt.Fprintf(w, "Hits: %d", cfg.fileserverHits.Load())
-}
-
-func (cfg *apiConfig) handlerResetMetrics(w http.ResponseWriter, req *http.Request) {
-	cfg.fileserverHits.Store(0)
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hits reset to 0"))
 }
