@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
+	"strings"
 )
 
 func handlerChirpValidate(w http.ResponseWriter, r *http.Request) {
@@ -11,7 +13,7 @@ func handlerChirpValidate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type resBody struct {
-		Valid bool `json:"valid"`
+		CleanedBody string `json:"cleaned_body"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -28,7 +30,17 @@ func handlerChirpValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	profaneWords := []string{"kerfuffle", "sharbert", "fornax"}
+	cleanedBodyArr := []string{}
+	for word := range strings.SplitSeq(params.Body, " ") {
+		if slices.Contains(profaneWords, strings.ToLower(word)) {
+			cleanedBodyArr = append(cleanedBodyArr, "****")
+			continue
+		}
+		cleanedBodyArr = append(cleanedBodyArr, word)
+	}
+
 	respondWithJSON(w, http.StatusOK, resBody{
-		Valid: true,
+		CleanedBody: strings.Join(cleanedBodyArr, " "),
 	})
 }
