@@ -45,6 +45,8 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("POST /api/validate_chirp", handlerChirpValidate)
 
+	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
+
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerResetMetrics)
 
@@ -53,6 +55,6 @@ func main() {
 		Handler: mux,
 	}
 
-	log.Printf("Serving files from %s on port %s:\n", filepathRoot, port)
+	log.Printf("Serving on port %s:\n", port)
 	log.Fatal(server.ListenAndServe())
 }
